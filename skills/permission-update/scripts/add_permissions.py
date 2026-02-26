@@ -17,7 +17,11 @@ global_settings = Path.home() / ".claude/settings.json"
 project_settings = Path(".claude/settings.local.json")
 
 # --- Add to global settings ---
-data = json.loads(global_settings.read_text())
+try:
+    data = json.loads(global_settings.read_text()) if global_settings.exists() else {}
+except json.JSONDecodeError as e:
+    print(f"Error: {global_settings} is malformed JSON: {e}", file=sys.stderr)
+    sys.exit(1)
 allow = data.setdefault("permissions", {}).setdefault("allow", [])
 
 merged = sorted(set(allow) | set(to_add), key=str.lower)

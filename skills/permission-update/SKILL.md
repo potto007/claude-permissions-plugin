@@ -1,8 +1,8 @@
 ---
 name: permission-update
-description: Update global allow rules from two sources: project settings.local.json (promote) and the bash-compound-allow hook log (analyze frequent prompts). Use only when explicitly invoked with /permission-update. Never auto-trigger.
 disable-model-invocation: true
 user-invocable: true
+model: haiku
 ---
 
 # permission-update

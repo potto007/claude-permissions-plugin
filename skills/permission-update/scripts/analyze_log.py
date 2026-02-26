@@ -17,7 +17,7 @@ if not LOG_FILE.exists():
     sys.exit(0)
 
 # Parse PROMPT lines: [HH:MM:SS] PROMPT  | not in allow list: 'cmd args'
-pattern = re.compile(r"PROMPT\s+\|\s+not in allow list:\s+'(.+)'$")
+pattern = re.compile(r"PROMPT\s+\|\s+not in allow list:\s+['\"](.+)['\"]$")
 
 counts: dict[str, int] = defaultdict(int)
 examples: dict[str, list[str]] = defaultdict(list)

@@ -15,6 +15,13 @@ from pathlib import Path
 LOG_FILE = Path("/tmp/bash-compound-allow.log")
 LINE_PATTERN = re.compile(r"PROMPT\s+\|\s+not in allow list:\s+['\"](.+)['\"]$")
 
+# Shell reserved words — not valid standalone commands.
+# These appear when the fallback splitter breaks apart for/while/if constructs.
+_SHELL_RESERVED = {
+    "do", "done", "then", "fi", "else", "elif", "in", "esac", "case",
+    "for", "while", "until", "if", "select",
+}
+
 
 def matches_pattern(cmd: str, pattern: str) -> bool:
     """Check if a command matches a Bash allow pattern (same logic as the hook)."""
@@ -71,6 +78,10 @@ def analyze(log_path: Path, existing_patterns: list[str]) -> dict:
         cmd = m.group(1).strip()
         cmd_clean = re.sub(r"\s+\d*>.*$", "", cmd).strip()
         if not cmd_clean:
+            continue
+        # Skip shell-syntax artifacts from fallback splitting
+        first_word = cmd_clean.split()[0] if cmd_clean.split() else ""
+        if first_word in _SHELL_RESERVED:
             continue
         if any(matches_pattern(cmd_clean, pat) for pat in existing_patterns):
             continue

@@ -144,6 +144,29 @@ class TestAnalyze:
         assert s["count"] == 3  # total occurrences
         assert s["examples"] == ["cargo build --release", "cargo build --debug"]
 
+    def test_skips_shell_reserved_word_commands(self, tmp_path):
+        """Commands starting with shell reserved words (do, done, then, etc.)
+        are artifacts from fallback splitting and should be ignored."""
+        log = tmp_path / "test.log"
+        log.write_text(
+            "[10:00:00] PROMPT  | not in allow list: 'do cp foo bar'\n"
+            "[10:00:01] PROMPT  | not in allow list: 'done'\n"
+            "[10:00:02] PROMPT  | not in allow list: 'then echo hello'\n"
+            "[10:00:03] PROMPT  | not in allow list: 'fi'\n"
+            "[10:00:04] PROMPT  | not in allow list: 'else rm -rf tmp'\n"
+            "[10:00:05] PROMPT  | not in allow list: 'for i in 1 2 3'\n"
+            "[10:00:06] PROMPT  | not in allow list: 'while true'\n"
+            "[10:00:07] PROMPT  | not in allow list: 'cargo build --release'\n"
+        )
+        result = analyze(log, [])
+        patterns = [s["pattern"] for s in result["suggestions"]]
+        # Only the real command should survive
+        assert len(result["suggestions"]) == 1
+        assert "cargo" in patterns[0]
+        # None of the shell reserved word commands should appear
+        for keyword in ("do", "done", "then", "fi", "else", "for", "while"):
+            assert not any(keyword in p for p in patterns), f"{keyword} should be filtered"
+
     def test_strips_redirections(self, tmp_path):
         log = tmp_path / "test.log"
         log.write_text(

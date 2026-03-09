@@ -5,7 +5,7 @@ Solves: https://github.com/anthropics/claude-code/issues/16561
 
 Patterns like Bash(jq:*) or Bash(git add:*) are matched per-part.
 If all parts are allowed → {"hookSpecificOutput": {"permissionDecision": "allow"}}
-Otherwise → {"hookSpecificOutput": {"permissionDecision": "ask"}}
+Otherwise → exit 0 silently (defer to Claude Code's normal permission flow)
 """
 
 import json
@@ -248,11 +248,7 @@ def main():
         if not command_is_allowed(part, patterns):
             log(f"PROMPT  | not in allow list: {part!r}")
             print(json.dumps({
-                "hookSpecificOutput": {
-                    "hookEventName": "PreToolUse",
-                    "permissionDecision": "ask",
-                    "permissionDecisionReason": f"[bash-compound-allow] not in allow list: {part!r}",
-                }
+                "systemMessage": f"[bash-compound-allow] not in allow list: {part!r}",
             }))
             sys.exit(0)
 
